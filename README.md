@@ -94,31 +94,31 @@
 ```
 [root@sm-epyc-centos8 ~]# wget https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-GenericCloud-8.2.2004-20200611.2.x86_64.qcow2 
 ``` 
-1. Boot the okd-svc VM
+2. Boot the okd-svc VM
 ```
 [root@sm-epyc-centos8 ~]# /usr/bin/virt-install --connect qemu:///system --name okd-svc --memory 4096 --vcpus 4 --os-type=linux --disk /var/lib/libvirt/images/CentOS-8-GenericCloud-8.2.2004-20200611.2.x86_64.qcow2,device=disk,bus=virtio,format=qcow2 --network network:okd45,model=virtio --noautoconsole --import --os-variant rhel8.0 &> /dev/null
 ``` 
-1. Move the files downloaded from the RedHat Cluster Manager site to the okd-svc node
+3. Move the files downloaded from the RedHat Cluster Manager site to the okd-svc node
 
 ```
 [root@sm-epyc-centos8 ~]# scp ~/Downloads/openshift-install-linux.tar.gz ~/Downloads/openshift-client-linux.tar.gz root@{okd-svc_IP_address}:/root/
    ```
 
-1. SSH to the okd-svc vm
+4. SSH to the okd-svc vm
 
 ```
 [root@sm-epyc-centos8 ~]# ssh root@{okd-svc_IP_address}
 [root@okd-svc ~]#
 ```
 
-1. Extract Client tools and copy them to `/usr/local/bin`
+5. Extract Client tools and copy them to `/usr/local/bin`
 
 ```
 [root@okd-svc ~]# mkdir /root/bin/
 [root@okd-svc ~]# tar xvf openshift-client-linux.tar.gz -C /root/bin
 ```
 
-1. Confirm Client Tools are working
+6. Confirm Client Tools are working
 
 ```
 [root@okd-svc ~]# kubectl version
@@ -132,33 +132,33 @@ Server Version: 4.5.0-0.okd-2020-10-03-012432
 Kubernetes Version: v1.18.3
 ```
 
-1. Extract the OpenShift Installer
+7. Extract the OpenShift Installer
 
 ```
 [root@okd-svc ~]# tar xvf openshift-install-linux.tar.gz -C /root/bin/
 ```
 
-1. Update CentOS so we get the latest packages for each of the services we are about to install
+8. Update CentOS so we get the latest packages for each of the services we are about to install
 
 ```
 [root@okd-svc ~]# dnf update
 ```
 
-1. Install Git
+9. Install Git
 
 ```
 [root@okd-svc ~]# dnf install git -y
 ```
 
-1. Download [config files](https://github.com/ryanhay/okd4-metal-install) for each of the services
+10. Download [config files](git@github.com:vijayibm/okd4.5-setup.git) for each of the services
 
-```bash
+```
 [root@okd-svc ~]# git clone git@github.com:vijayibm/okd4.5-setup.git
 ```
 
-1. OPTIONAL: Create a file '~/.vimrc' and paste the following (this helps with editing in vim, particularly yaml files):
+11. OPTIONAL: Create a file '~/.vimrc' and paste the following (this helps with editing in vim, particularly yaml files):
 
-```bash
+```
 [root@okd-svc ~]# cat <<EOT >> ~/.vimrc
    syntax on
    set nu et ai sts=0 ts=2 sw=2 list hls
@@ -167,12 +167,12 @@ Kubernetes Version: v1.18.3
 
 Update the preferred editor
 
-```bash
+```
 [root@okd-svc ~]# export OC_EDITOR="vim"
 [root@okd-svc ~]# export KUBE_EDITOR="vim"
 ```
 
-1. Set a Static IP for OKD network interface `nmtui-edit ens3` or edit `/etc/sysconfig/network-scripts/ifcfg-ens3`
+12. Set a Static IP for OKD network interface `nmtui-edit ens3` or edit `/etc/sysconfig/network-scripts/ifcfg-ens3`
 
    - **Address**: 192.168.100.1
    - **DNS Server**: 192.168.100.1
@@ -180,88 +180,88 @@ Update the preferred editor
 
    > If changes arent applied automatically you can bounce the NIC with `nmcli connection down ens3` and `nmcli connection up ens3`
 
-1. Setup firewalld
+13. Setup firewalld
 
    Create **internal** and **external** zones
 
-   ```bash
+```
 [root@okd-svc ~]# nmcli connection modify ens3 connection.zone internal
 [root@okd-svc ~]# nmcli connection modify ens3 connection.zone external
-   ```
+```
 
    View zones:
 
-   ```bash
+```
 [root@okd-svc ~]# firewall-cmd --get-active-zones
-   ```
+```
 
    Set masquerading (source-nat) on the both zones.
 
    So to give a quick example of source-nat - for packets leaving the external interface, which in this case is ens192 - after they have been routed they will have their source address altered to the interface address of ens192 so that return packets can find their way back to this interface where the reverse will happen.
 
-   ```bash
+```
 [root@okd-svc ~]# firewall-cmd --zone=external --add-masquerade --permanent
 [root@okd-svc ~]# firewall-cmd --zone=internal --add-masquerade --permanent
-   ```
+```
 
    Reload firewall config
 
-   ```bash
+```
 [root@okd-svc ~]# firewall-cmd --reload
-   ```
+```
 
    Check the current settings of each zone
 
-   ```bash
+```
 [root@okd-svc ~]# firewall-cmd --list-all --zone=internal
 [root@okd-svc ~]# firewall-cmd --list-all --zone=external
-   ```
+```
 
    When masquerading is enabled so is ip forwarding which basically makes this host a router. Check:
 
-   ```bash
+```
 [root@okd-svc ~]# cat /proc/sys/net/ipv4/ip_forward
-   ```
+```
 
-1. Install and configure BIND DNS
+14. Install and configure BIND DNS
 
    Install
 
-   ```bash
+```
 [root@okd-svc ~]# dnf install bind bind-utils -y
-   ```
+```
 
    Apply configuration
 
-   ```bash
+```
 [root@okd-svc ~]# cp ~/okd4.5-setup/dns/named.conf /etc/named.conf
 [root@okd-svc ~]# cp -R ~/okd4.5-setup/dns/zones/* /var/named/
-   ```
+```
 
    Configure the firewall for DNS
 
-   ```bash
+```
 [root@okd-svc ~]# firewall-cmd --add-port=53/udp --zone=internal --permanent
 [root@okd-svc ~]# firewall-cmd --reload
-   ```
+```
 
    Enable and start the service
 
-   ```bash
+```
 [root@okd-svc ~]# systemctl enable named
 [root@okd-svc ~]# systemctl start named
 [root@okd-svc ~]# systemctl status named
-   ```
+```
 
    Confirm dig now sees the correct DNS results by using the DNS Server running locally
 
-   ```bash
+```
 [root@okd-svc ~]# dig okd45.smcloud.local
    # The following should return the answer okd-bootstrap.okd45.smcloud.local from the local server
 [root@okd-svc ~]# dig -x 192.168.100.20
-   ```
+```
 
-1. Install & configure DHCP
+15. Install & configure DHCP
 
    Install the DHCP Server
 
