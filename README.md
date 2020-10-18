@@ -1,3 +1,5 @@
+> This tutorial is based on KVM Host and a modified version of the original developed by [Ryan](https://github.com/ryanhay/ocp4-metal-install)
+
 # OKD 4.5 Bare Metal Install - User Provisioned Infrastructure (UPI)
 
   - [OKD 4.5 Bare Metal Install - User Provisioned Infrastructure (UPI)](#openshift-4-bare-metal-install---user-provisioned-infrastructure-upi)
