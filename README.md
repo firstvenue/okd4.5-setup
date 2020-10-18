@@ -2,7 +2,7 @@
 
 - [OKD 4.5 Bare Metal Install - User Provisioned Infrastructure (UPI)]
   - [Prepare the 'Bare Metal' environment](#prepare-the-bare-metal-environment)
-  - [Download Software](#download-software)
+  - [Download Software](#download-required-software)
   - [Configure Environmental Services](#configure-environmental-services)
   - [Generate and host install files](#generate-and-host-install-files)
   - [Deploy OpenShift](#deploy-openshift)
