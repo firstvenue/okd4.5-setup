@@ -9,5 +9,5 @@ spec:
     storage: 100Gi
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    path: /srv/nfs_shares/okd45/registry
-    server: 192.168.100.1
+    path: /okd45/registry
+    server: 192.168.100.5
