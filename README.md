@@ -61,18 +61,19 @@
      - openshift-install-linux-4.5.x-x.okd-xxxx-xx-xx-xxxxxx.tar.gz
 
 ## Configure OKD Network on KVM Host
-     - Create OKD Network
+   - Create OKD Network
 
-``` [root@sm-epyc-centos8 ~]# cat /etc/libvirt/qemu/networks/okd45.xml 
+```
+[root@sm-epyc-centos8 ~]# vim /etc/libvirt/qemu/networks/okd45.xml 
 <network>
   <name>okd45</name>
   <forward mode='nat'/>
   <domain name='okd45.smcloud.local'/>
   <ip address='192.168.100.1' netmask='255.255.255.0'>
   </ip>
-</network>```
-
-
+</network>
+```       
+   
 ## Configure Environmental Services
 
 1. Install CentOS8 on the okd-svc host
