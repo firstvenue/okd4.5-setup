@@ -158,7 +158,7 @@ Kubernetes Version: v1.18.3
 
 1. OPTIONAL: Create a file '~/.vimrc' and paste the following (this helps with editing in vim, particularly yaml files):
 
-```
+```bash
 [root@okd-svc ~]# cat <<EOT >> ~/.vimrc
    syntax on
    set nu et ai sts=0 ts=2 sw=2 list hls
@@ -167,7 +167,7 @@ Kubernetes Version: v1.18.3
 
 Update the preferred editor
 
-```
+```bash
 [root@okd-svc ~]# export OC_EDITOR="vim"
 [root@okd-svc ~]# export KUBE_EDITOR="vim"
 ```
