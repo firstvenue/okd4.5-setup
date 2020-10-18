@@ -185,14 +185,14 @@ Update the preferred editor
    Create **internal** and **external** zones
 
    ```bash
-   nmcli connection modify ens3 connection.zone internal
-   nmcli connection modify ens3 connection.zone external
+[root@okd-svc ~]# nmcli connection modify ens3 connection.zone internal
+[root@okd-svc ~]# nmcli connection modify ens3 connection.zone external
    ```
 
    View zones:
 
    ```bash
-   firewall-cmd --get-active-zones
+[root@okd-svc ~]# firewall-cmd --get-active-zones
    ```
 
    Set masquerading (source-nat) on the both zones.
@@ -200,27 +200,27 @@ Update the preferred editor
    So to give a quick example of source-nat - for packets leaving the external interface, which in this case is ens192 - after they have been routed they will have their source address altered to the interface address of ens192 so that return packets can find their way back to this interface where the reverse will happen.
 
    ```bash
-   firewall-cmd --zone=external --add-masquerade --permanent
-   firewall-cmd --zone=internal --add-masquerade --permanent
+[root@okd-svc ~]# firewall-cmd --zone=external --add-masquerade --permanent
+[root@okd-svc ~]# firewall-cmd --zone=internal --add-masquerade --permanent
    ```
 
    Reload firewall config
 
    ```bash
-   firewall-cmd --reload
+[root@okd-svc ~]# firewall-cmd --reload
    ```
 
    Check the current settings of each zone
 
    ```bash
-   firewall-cmd --list-all --zone=internal
-   firewall-cmd --list-all --zone=external
+[root@okd-svc ~]# firewall-cmd --list-all --zone=internal
+[root@okd-svc ~]# firewall-cmd --list-all --zone=external
    ```
 
    When masquerading is enabled so is ip forwarding which basically makes this host a router. Check:
 
    ```bash
-   cat /proc/sys/net/ipv4/ip_forward
+[root@okd-svc ~]# cat /proc/sys/net/ipv4/ip_forward
    ```
 
 1. Install and configure BIND DNS
@@ -228,51 +228,37 @@ Update the preferred editor
    Install
 
    ```bash
-   dnf install bind bind-utils -y
+[root@okd-svc ~]# dnf install bind bind-utils -y
    ```
 
    Apply configuration
 
    ```bash
-   \cp ~/okd4-metal-install/dns/named.conf /etc/named.conf
-   cp -R ~/okd4-metal-install/dns/zones /etc/named/
+[root@okd-svc ~]# cp ~/okd4.5-setup/dns/named.conf /etc/named.conf
+[root@okd-svc ~]# cp -R ~/okd4.5-setup/dns/zones/* /var/named/
    ```
 
    Configure the firewall for DNS
 
    ```bash
-   firewall-cmd --add-port=53/udp --zone=internal --permanent
-   firewall-cmd --reload
+[root@okd-svc ~]# firewall-cmd --add-port=53/udp --zone=internal --permanent
+[root@okd-svc ~]# firewall-cmd --reload
    ```
 
    Enable and start the service
 
    ```bash
-   systemctl enable named
-   systemctl start named
-   systemctl status named
-   ```
-
-   > At the moment DNS will still be pointing to the LAN DNS server. You can see this by testing with `dig okd.lan`.
-
-   Change the LAN nic (ens192) to use 127.0.0.1 for DNS AND ensure `Ignore automatically Obtained DNS parameters` is ticked
-
-   ```bash
-   nmtui-edit ens192
-   ```
-
-   Restart Network Manager
-
-   ```bash
-   systemctl restart NetworkManager
+[root@okd-svc ~]# systemctl enable named
+[root@okd-svc ~]# systemctl start named
+[root@okd-svc ~]# systemctl status named
    ```
 
    Confirm dig now sees the correct DNS results by using the DNS Server running locally
 
    ```bash
-   dig okd.lan
-   # The following should return the answer okd-bootstrap.lab.okd.lan from the local server
-   dig -x 192.168.100.200
+[root@okd-svc ~]# dig okd45.smcloud.local
+   # The following should return the answer okd-bootstrap.okd45.smcloud.local from the local server
+[root@okd-svc ~]# dig -x 192.168.100.20
    ```
 
 1. Install & configure DHCP
