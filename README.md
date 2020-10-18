@@ -20,7 +20,7 @@
 
 > KVM Host is used in this solution.
 
-### Required machines:
+#### Required machines:
 1. One temporary bootstrap machine
    - Name: okd-boostrap
    - 4vcpu
@@ -112,6 +112,7 @@
 
 ```
 [root@sm-epyc-centos8 ~]# ssh root@{okd-svc_IP_address}
+
 [root@okd-svc ~]#
 ```
 
@@ -178,8 +179,8 @@ Update the preferred editor
 
 12. Set a Static IP for OKD network interface `nmtui-edit ens3` or edit `/etc/sysconfig/network-scripts/ifcfg-ens3`
 
-   - **Address**: 192.168.100.1
-   - **DNS Server**: 192.168.100.1
+   - **Address**: 192.168.100.5
+   - **DNS Server**: 192.168.100.5
    - **Search domain**: okd45.smcloud.local
 
    > If changes arent applied automatically you can bounce the NIC with `nmcli connection down ens3` and `nmcli connection up ens3`
@@ -329,7 +330,7 @@ $TTL 1D
 					1W	; expire
 					3H )	; minimum
                  		IN NS           okd-svc.smcloud.local.
-okd-svc 			IN A		192.168.100.1
+okd-svc 			IN A		192.168.100.5
 
 $ORIGIN okd45.smcloud.local.
 ; Temp Bootstrap Node
@@ -376,7 +377,7 @@ $TTL 1D
 					1W	; expire
 					3H )	; minimum
                  		IN NS           okd-svc.smcloud.local.
-1 				IN PTR 		okd-svc
+5 				IN PTR 		okd-svc
 
 ; Temp Bootstrap Node
 20				IN PTR		okd-bootstrap.okd45.smcloud.local.
@@ -480,10 +481,10 @@ default-lease-time 14400;
 max-lease-time 14400;
 
 subnet 192.168.100.0 netmask 255.255.255.0 {
- option routers                  192.168.100.1; # lan
+ option routers                  192.168.100.5; # lan
  option subnet-mask              255.255.255.0;
  option domain-name              "okd45.smcloud.local";
- option domain-name-servers       192.168.100.1;
+ option domain-name-servers       192.168.100.5;
  range 192.168.100.11 192.168.100.50;
 }
 
