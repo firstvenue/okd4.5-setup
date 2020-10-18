@@ -318,14 +318,14 @@ view zone files: forward.zone
 ```
 [root@okd-svc ~]# cat /var/named/forward.zone
 $TTL 1D
-@	IN SOA	 sm-epyc-centos8.smcloud.local. root.smcloud.local. (
+@	IN SOA	 okd-svc.smcloud.local. root.smcloud.local. (
 					0	; serial
 					1D	; refresh
 					1H	; retry
 					1W	; expire
 					3H )	; minimum
-                 		IN NS           sm-epyc-centos8.smcloud.local.
-sm-epyc-centos8			IN A		192.168.100.1
+                 		IN NS           okd-svc.smcloud.local.
+okd-svc 			IN A		192.168.100.1
 
 $ORIGIN okd45.smcloud.local.
 ; Temp Bootstrap Node
@@ -364,15 +364,15 @@ view zone files: reverse.zone
 ```
 [root@okd-svc ~]# cat /var/named/reverse.zone
 $TTL 1D
-@	IN SOA	 sm-epyc-centos8.okd45.smcloud.local. root.okd45.smcloud.local. (
+@	IN SOA	 okd-svc.smcloud.local. root.smcloud.local. (
 
 					0	; serial
 					1D	; refresh
 					1H	; retry
 					1W	; expire
 					3H )	; minimum
-                 		IN NS           sm-epyc-centos8.smcloud.local.
-1 				IN PTR 		sm-epyc-centos8
+                 		IN NS           okd-svc.smcloud.local.
+1 				IN PTR 		okd-svc
 
 ; Temp Bootstrap Node
 20				IN PTR		okd-bootstrap.okd45.smcloud.local.
