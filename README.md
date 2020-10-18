@@ -235,8 +235,168 @@ Update the preferred editor
 
 ```
 [root@okd-svc ~]# cp ~/okd4.5-setup/dns/named.conf /etc/named.conf
+
 [root@okd-svc ~]# cp -R ~/okd4.5-setup/dns/zones/* /var/named/
 ```
+view config file:
+
+```
+[root@okd-svc ~]# cat /etc/named.conf
+//
+// named.conf
+//
+// Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+// server as a caching only nameserver (as a localhost DNS resolver only).
+//
+// See /usr/share/doc/bind*/sample/ for example named configuration files.
+//
+
+options {
+	listen-on port 53 { 127.0.0.1; any; };
+	directory 	"/var/named";
+	dump-file 	"/var/named/data/cache_dump.db";
+	statistics-file "/var/named/data/named_stats.txt";
+	memstatistics-file "/var/named/data/named_mem_stats.txt";
+	secroots-file	"/var/named/data/named.secroots";
+	recursing-file	"/var/named/data/named.recursing";
+	allow-query     { localhost; any; };
+        forwarders { 8.8.8.8; 8.8.4.4; };
+
+	/* 
+	 - If you are building an AUTHORITATIVE DNS server, do NOT enable recursion.
+	 - If you are building a RECURSIVE (caching) DNS server, you need to enable 
+	   recursion. 
+	 - If your recursive DNS server has a public IP address, you MUST enable access 
+	   control to limit queries to your legitimate users. Failing to do so will
+	   cause your server to become part of large scale DNS amplification 
+	   attacks. Implementing BCP38 within your network would greatly
+	   reduce such attack surface 
+	*/
+	recursion yes;
+
+	dnssec-enable yes;
+	dnssec-validation yes;
+
+	managed-keys-directory "/var/named/dynamic";
+
+	pid-file "/run/named/named.pid";
+	session-keyfile "/run/named/session.key";
+
+	/* https://fedoraproject.org/wiki/Changes/CryptoPolicy */
+	include "/etc/crypto-policies/back-ends/bind.config";
+};
+
+logging {
+        channel default_debug {
+                file "data/named.run";
+                severity dynamic;
+        };
+};
+
+zone "." IN {
+	type hint;
+	file "named.ca";
+};
+zone "smcloud.local" IN {
+        type master;
+        file "forword.zone";
+        allow-update { none; };
+};
+
+zone "100.168.192.in-addr.arpa" IN {
+        type master;
+        file "reverse.zone";
+        allow-update { none; };
+};
+
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+```
+
+view zone files: forward.zone
+```
+[root@okd-svc ~]# cat /var/named/forward.zone
+$TTL 1D
+@	IN SOA	 sm-epyc-centos8.smcloud.local. root.smcloud.local. (
+					0	; serial
+					1D	; refresh
+					1H	; retry
+					1W	; expire
+					3H )	; minimum
+                 		IN NS           sm-epyc-centos8.smcloud.local.
+sm-epyc-centos8			IN A		192.168.100.1
+
+$ORIGIN okd45.smcloud.local.
+; Temp Bootstrap Node
+ocp-bootstrap			IN A		192.168.100.20
+
+; Control Plane Nodes
+ocp-cp-1			IN A		192.168.100.21
+ocp-cp-2			IN A		192.168.100.22
+ocp-cp-3			IN A		192.168.100.23
+
+; ETCD Cluster
+etcd-0				IN A		192.168.100.21
+etcd-1				IN A		192.168.100.22
+etcd-2				IN A		192.168.100.23
+
+; Worker Nodes
+ocp-w-1				IN A		192.168.100.24
+ocp-w-2				IN A		192.168.100.25
+
+; OpenShift Internal SRV records (cluster name = okd45)
+_etcd-server-ssl._tcp.okd45.smcloud.local.    86400     IN    SRV     0    10    2380    etcd-0
+_etcd-server-ssl._tcp.okd45.smcloud.local.    86400     IN    SRV     0    10    2380    etcd-1
+_etcd-server-ssl._tcp.okd45.smcloud.local.    86400     IN    SRV     0    10    2380    etcd-2
+
+; OpenShift Internal - Load balancer
+api       			IN A            192.168.100.10
+api-int       			IN A            192.168.100.10
+
+$ORIGIN apps.okd45.smcloud.local.
+*				IN A		192.168.100.10
+
+oauth-openshift     		IN A     	192.168.100.10
+console-openshift-console     	IN A     	192.168.100.10
+```
+view zone files: reverse.zone
+```
+[root@okd-svc ~]# cat /var/named/reverse.zone
+$TTL 1D
+@	IN SOA	 sm-epyc-centos8.okd45.smcloud.local. root.okd45.smcloud.local. (
+
+					0	; serial
+					1D	; refresh
+					1H	; retry
+					1W	; expire
+					3H )	; minimum
+                 		IN NS           sm-epyc-centos8.smcloud.local.
+1 				IN PTR 		sm-epyc-centos8
+
+; Temp Bootstrap Node
+20				IN PTR		ocp-bootstrap.okd45.smcloud.local.
+
+; Control Plane Nodes
+21 				IN PTR 		ocp-cp-1.okd45.smcloud.local.
+22 				IN PTR 		ocp-cp-2.okd45.smcloud.local.
+23 				IN PTR 		ocp-cp-3.okd45.smcloud.local.
+
+; ETCD Cluster
+21 				IN PTR 		etcd-0.okd45.smcloud.local.
+22 				IN PTR 		etcd-1.okd45.smcloud.local.
+23 				IN PTR 		etcd-2.okd45.smcloud.local.
+
+; Worker Nodes
+24 				IN PTR 		ocp-w-1.okd45.smcloud.local.
+25 				IN PTR 		ocp-w-2.okd45.smcloud.local.
+
+; OpenShift Internal - Load balancer
+10				IN PTR		api.okd45.smcloud.local
+10				IN PTR		api-api.okd45.smcloud.local
+```
+
+
 
    Configure the firewall for DNS
 
