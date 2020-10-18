@@ -435,7 +435,7 @@ The following should return the answer okd-bootstrap.okd45.smcloud.local from th
 ;20.100.168.192.in-addr.arpa.	IN	PTR
 
 ;; ANSWER SECTION:
-20.100.168.192.in-addr.arpa. 86400 IN	PTR	ocp-bootstrap.okd45.smcloud.local.
+20.100.168.192.in-addr.arpa. 86400 IN	PTR	okd-bootstrap.okd45.smcloud.local.
 
 ;; AUTHORITY SECTION:
 100.168.192.in-addr.arpa. 86400	IN	NS	okd-svc.smcloud.local.
@@ -453,222 +453,377 @@ okd-svc.smcloud.local. 86400 IN	A	192.168.100.5
 
    Install the DHCP Server
 
-   ```bash
-   dnf install dhcp-server -y
-   ```
+```
+[root@okd-svc ~]# dnf install dhcp-server -y
+```
 
    Edit dhcpd.conf from the cloned git repo to have the correct mac address for each host and copy the conf file to the correct location for the DHCP service to use
 
-   ```bash
-   \cp ~/okd4-metal-install/dhcpd.conf /etc/dhcp/dhcpd.conf
-   ```
+```
+[root@okd-svc ~]# cp ~/okd4.5-setup/dhcpd.conf /etc/dhcp/dhcpd.conf
+```
+view 'dhcpd.conf' file:
+
+```
+[root@okd-svc ~]# cat /etc/dhcp/dhcpd.conf
+authoritative;
+ddns-update-style interim;
+allow booting;
+allow bootp;
+allow unknown-clients;
+ignore client-updates;
+default-lease-time 14400;
+max-lease-time 14400;
+
+subnet 192.168.100.0 netmask 255.255.255.0 {
+ option routers                  192.168.100.1; # lan
+ option subnet-mask              255.255.255.0;
+ option domain-name              "okd45.smcloud.local";
+ option domain-name-servers       192.168.100.1;
+ range 192.168.100.11 192.168.100.50;
+}
+
+host okd-bootstrap {
+ hardware ethernet 52:54:00:3e:30:af;
+ fixed-address 192.168.100.20;
+ option host-name "okd-bootstrap";
+}
+
+host okd-cp-1 {
+ hardware ethernet 52:54:00:df:d3:b0;
+ fixed-address 192.168.100.21;
+ option host-name "okd-cp-1";
+}
+
+host okd-cp-2 {
+ hardware ethernet 52:54:00:39:1f:46;
+ fixed-address 192.168.100.22;
+ option host-name "okd-cp-2";
+}
+
+host okd-cp-3 {
+ hardware ethernet 52:54:00:08:24:8e;
+ fixed-address 192.168.100.23;
+ option host-name "okd-cp-3";
+}
+
+host okd-w-1 {
+ hardware ethernet 52:54:00:8d:9d:77;
+ fixed-address 192.168.100.24;
+ option host-name "okd-w-1";
+}
+
+host okd-w-2 {
+ hardware ethernet 52:54:00:6f:39:cd;
+ fixed-address 192.168.100.25;
+ option host-name "okd-w-2";
+}
+
+host okd-haproxy {
+ hardware ethernet 52:54:00:f6:10:dc;
+ fixed-address 192.168.100.10;
+ option host-name "okd-haproxy";
+}
+```
 
    Configure the Firewall
 
-   ```bash
-   firewall-cmd --add-service=dhcp --zone=internal --permanent
-   firewall-cmd --reload
-   ```
+```
+[root@okd-svc ~]# firewall-cmd --add-service=dhcp --zone=internal --permanent
+[root@okd-svc ~]# firewall-cmd --reload
+```
 
    Enable and start the service
 
-   ```bash
-   systemctl enable dhcpd
-   systemctl start dhcpd
-   systemctl status dhcpd
-   ```
+```
+[root@okd-svc ~]# systemctl enable dhcpd
+[root@okd-svc ~]# systemctl start dhcpd
+[root@okd-svc ~]# systemctl status dhcpd
+```
 
-1. Install & configure Apache Web Server
+16. Install & configure Apache Web Server
 
    Install Apache
 
-   ```bash
-   dnf install httpd -y
-   ```
+```
+[root@okd-svc ~]# dnf install httpd -y
+```
 
    Change default listen port to 8080 in httpd.conf
 
-   ```bash
-   sed -i 's/Listen 80/Listen 0.0.0.0:8080/' /etc/httpd/conf/httpd.conf
-   ```
+```
+[root@okd-svc ~]# sed -i 's/Listen 80/Listen 0.0.0.0:8080/' /etc/httpd/conf/httpd.conf
+```
 
    Configure the firewall for Web Server traffic
 
-   ```bash
-   firewall-cmd --add-port=8080/tcp --zone=internal --permanent
-   firewall-cmd --reload
-   ```
+```
+[root@okd-svc ~]# firewall-cmd --add-port=8080/tcp --zone=internal --permanent
+[root@okd-svc ~]# firewall-cmd --reload
+```
 
    Enable and start the service
 
-   ```bash
-   systemctl enable httpd
-   systemctl start httpd
-   systemctl status httpd
-   ```
+```
+[root@okd-svc ~]# systemctl enable httpd
+[root@okd-svc ~]# systemctl start httpd
+[root@okd-svc ~]# systemctl status httpd
+```
 
    Making a GET request to localhost on port 8080 should now return the default Apache webpage
 
-   ```bash
-   curl localhost:8080
-   ```
+```
+[root@okd-svc ~]# curl localhost:8080
+```
 
-1. Install & configure HAProxy
+17. Install & configure HAProxy
 
    Install HAProxy
 
-   ```bash
-   dnf install haproxy -y
-   ```
+```
+[root@okd-haproxy ~]# dnf install haproxy -y
+```
 
    Copy HAProxy config
 
-   ```bash
-   \cp ~/okd4-metal-install/haproxy.cfg /etc/haproxy/haproxy.cfg
-   ```
+```
+[root@okd-haproxy ~]# cp ~/okd4.5/haproxy.cfg /etc/haproxy/haproxy.cfg
+```
+view 'haproxy.cfg'
+
+```
+[root@okd-haproxy ~]# cat /etc/haproxy/haproxy.cfg
+# Global settings
+#---------------------------------------------------------------------
+global
+    maxconn     20000
+    log         /dev/log local0 info
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    user        haproxy
+    group       haproxy
+    daemon
+
+    # turn on stats unix socket
+    stats socket /var/lib/haproxy/stats
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+    log                     global
+    mode                    http
+    option                  httplog
+    option                  dontlognull
+    option http-server-close
+    option redispatch
+    option forwardfor       except 127.0.0.0/8
+    retries                 3
+    maxconn                 20000
+    timeout http-request    10000ms
+    timeout http-keep-alive 10000ms
+    timeout check           10000ms
+    timeout connect         40000ms
+    timeout client          300000ms
+    timeout server          300000ms
+    timeout queue           50000ms
+
+# Enable HAProxy stats
+listen stats
+    bind :9000
+    stats uri /stats
+    stats refresh 10000ms
+
+# Kube API Server
+frontend k8s_api_frontend
+    bind :6443
+    default_backend k8s_api_backend
+    mode tcp
+
+backend k8s_api_backend
+    mode tcp
+    balance source
+    server      okd-bootstrap 192.168.100.20:6443 check
+    server      okd-cp-1 192.168.100.21:6443 check
+    server      okd-cp-2 192.168.100.22:6443 check
+    server      okd-cp-3 192.168.100.23:6443 check
+
+# OCP Machine Config Server
+frontend okd_machine_config_server_frontend
+    mode tcp
+    bind :22623
+    default_backend okd_machine_config_server_backend
+
+backend okd_machine_config_server_backend
+    mode tcp
+    balance source
+    server      okd-bootstrap 192.168.100.20:22623 check
+    server      okd-cp-1 192.168.100.21:22623 check
+    server      okd-cp-2 192.168.100.22:22623 check
+    server      okd-cp-3 192.168.100.23:22623 check
+
+# OCP Ingress - layer 4 tcp mode for each. Ingress Controller will handle layer 7.
+frontend okd_http_ingress_frontend
+    bind :80
+    default_backend okd_http_ingress_backend
+    mode tcp
+
+backend okd_http_ingress_backend
+    balance source
+    mode tcp
+    server      okd-w-1 192.168.100.24:80 check
+    server      okd-w-2 192.168.100.25:80 check
+
+frontend okd_https_ingress_frontend
+    bind *:443
+    default_backend okd_https_ingress_backend
+    mode tcp
+
+backend okd_https_ingress_backend
+    mode tcp
+    balance source
+    server      okd-w-1 192.168.100.24:443 check
+    server      okd-w-2 192.168.100.25:443 check
+```
 
    Configure the Firewall
 
-   > Note: Opening port 9000 in the external zone allows access to HAProxy stats that are useful for monitoring and troubleshooting. The UI can be accessed at: `http://{okd-svc_IP_address}:9000/stats`
+   > Note: Opening port 9000 in the external zone allows access to HAProxy stats that are useful for monitoring and troubleshooting. The UI can be accessed at: `http://{okd-haproxy_IP_Address}:9000/stats`
 
-   ```bash
-   firewall-cmd --add-port=6443/tcp --zone=internal --permanent # kube-api-server on control plane nodes
-   firewall-cmd --add-port=6443/tcp --zone=external --permanent # kube-api-server on control plane nodes
-   firewall-cmd --add-port=22623/tcp --zone=internal --permanent # machine-config server
-   firewall-cmd --add-service=http --zone=internal --permanent # web services hosted on worker nodes
-   firewall-cmd --add-service=http --zone=external --permanent # web services hosted on worker nodes
-   firewall-cmd --add-service=https --zone=internal --permanent # web services hosted on worker nodes
-   firewall-cmd --add-service=https --zone=external --permanent # web services hosted on worker nodes
-   firewall-cmd --add-port=9000/tcp --zone=external --permanent # HAProxy Stats
-   firewall-cmd --reload
-   ```
+```
+[root@okd-haproxy ~]# firewall-cmd --add-port=6443/tcp --zone=internal --permanent # kube-api-server on control plane nodes
+[root@okd-haproxy ~]# firewall-cmd --add-port=6443/tcp --zone=external --permanent # kube-api-server on control plane nodes
+[root@okd-haproxy ~]# firewall-cmd --add-port=22623/tcp --zone=internal --permanent # machine-config server
+[root@okd-haproxy ~]# firewall-cmd --add-service=http --zone=internal --permanent # web services hosted on worker nodes
+[root@okd-haproxy ~]# firewall-cmd --add-service=http --zone=external --permanent # web services hosted on worker nodes
+[root@okd-haproxy ~]# firewall-cmd --add-service=https --zone=internal --permanent # web services hosted on worker nodes
+[root@okd-haproxy ~]# firewall-cmd --add-service=https --zone=external --permanent # web services hosted on worker nodes
+[root@okd-haproxy ~]# firewall-cmd --add-port=9000/tcp --zone=external --permanent # HAProxy Stats
+[root@okd-haproxy ~]# firewall-cmd --reload
+```
 
    Enable and start the service
 
-   ```bash
-   setsebool -P haproxy_connect_any 1 # SELinux name_bind access
-   systemctl enable haproxy
-   systemctl start haproxy
-   systemctl status haproxy
-   ```
+```
+[root@okd-haproxy ~]# setsebool -P haproxy_connect_any 1 # SELinux name_bind access
+[root@okd-haproxy ~]# systemctl enable haproxy
+[root@okd-haproxy ~]# systemctl start haproxy
+[root@okd-haproxy ~]# systemctl status haproxy
+```
 
-1. Install and configure NFS for the OpenShift Registry. It is a requirement to provide storage for the Registry, emptyDir can be specified if necessary.
+18. Install and configure NFS for the OpenShift Registry. It is a requirement to provide storage for the Registry, emptyDir can be specified if necessary.
 
    Install NFS Server
 
-   ```bash
-   dnf install nfs-utils -y
+```bash
+[root@okd-svc ~]# dnf install nfs-utils -y
    ```
 
    Create the Share
 
    Check available disk space and its location `df -h`
 
-   ```bash
-   mkdir -p /shares/registry
-   chown -R nobody:nobody /shares/registry
-   chmod -R 777 /shares/registry
+```
+[root@okd-svc ~]# mkdir -p /okd45/registry
+[root@okd-svc ~]# chown -R nobody:nobody /okd45/registry
+[root@okd-svc ~]# chmod -R 777 /okd45/registry
    ```
 
    Export the Share
 
-   ```bash
-   echo "/shares/registry  192.168.100.0/24(rw,sync,root_squash,no_subtree_check,no_wdelay)" > /etc/exports
+   ```
+[root@okd-svc ~]# echo "/okd45/registry  192.168.100.0/24(rw,sync,root_squash,no_subtree_check,no_wdelay)" > /etc/exports
    exportfs -rv
    ```
 
    Set Firewall rules:
 
-   ```bash
-   firewall-cmd --zone=internal --add-service mountd --permanent
-   firewall-cmd --zone=internal --add-service rpc-bind --permanent
-   firewall-cmd --zone=internal --add-service nfs --permanent
-   firewall-cmd --reload
-   ```
+```
+[root@okd-svc ~]# firewall-cmd --zone=internal --add-service mountd --permanent
+[root@okd-svc ~]# firewall-cmd --zone=internal --add-service rpc-bind --permanent
+[root@okd-svc ~]# firewall-cmd --zone=internal --add-service nfs --permanent
+[root@okd-svc ~]# firewall-cmd --reload
+```
 
    Enable and start the NFS related services
 
-   ```bash
-   systemctl enable nfs-server rpcbind
-   systemctl start nfs-server rpcbind nfs-mountd
-   ```
+```bash
+[root@okd-svc ~]# systemctl enable nfs-server rpcbind
+[root@okd-svc ~]# systemctl start nfs-server rpcbind nfs-mountd
+```
 
 ## Generate and host install files
 
-1. Generate an SSH key pair keeping all default options
+20. Generate an SSH key pair keeping all default options
 
-   ```bash
-   ssh-keygen
-   ```
+```
+[root@okd-svc ~]# ssh-keygen
+```
 
-1. Create an install directory
+21. Create an install directory
 
-   ```bash
-   mkdir ~/okd-install
-   ```
+```
+[root@okd-svc ~]# mkdir ~/okd-install
+```
 
-1. Copy the install-config.yaml included in the clones repository to the install directory
+22. Copy the install-config.yaml included in the clones repository to the install directory
 
-   ```bash
-   cp ~/okd4-metal-install/install-config.yaml ~/okd-install
-   ```
+```
+[root@okd-svc ~]# cp ~/okd4.5-setup/install-config.yaml ~/okd-install
+```
 
-1. Update the install-config.yaml with your own pull-secret and ssh key.
+23. Update the install-config.yaml with your own ssh key.
 
-   - Line 23 should contain the contents of your pull-secret.txt
    - Line 24 should contain the contents of your '~/.ssh/id_rsa.pub'
 
-   ```bash
-   vim ~/okd-install/install-config.yaml
-   ```
+```
+[root@okd-svc ~]# cat ~/okd-install/install-config.yaml
+```
 
-1. Generate Kubernetes manifest files
+24. Generate Kubernetes manifest files
 
-   ```bash
-   ~/openshift-install create manifests --dir ~/okd-install
-   ```
+```
+[root@okd-svc ~]#openshift-install create manifests --dir ~/okd-install
+```
 
    > A warning is shown about making the control plane nodes schedulable. It is up to you if you want to run workloads on the Control Plane nodes. If you dont want to you can disable this with:
-   > `sed -i 's/mastersSchedulable: true/mastersSchedulable: false/' ~/okd-install/manifests/cluster-scheduler-02-config.yml`.
+```
+[root@okd-svc ~]# sed -i 's/mastersSchedulable: true/mastersSchedulable: false/' ~/okd-install/manifests/cluster-scheduler-02-config.yml
+```
    > Make any other custom changes you like to the core Kubernetes manifest files.
 
    Generate the Ignition config and Kubernetes auth files
 
-   ```bash
-   ~/openshift-install create ignition-configs --dir ~/okd-install/
-   ```
+```
+[root@okd-svc ~]#openshift-install create ignition-configs --dir ~/okd-install/
+```
 
-1. Create a hosting directory to serve the configuration files for the OpenShift booting process
+25. Create a hosting directory to serve the configuration files for the OpenShift booting process
 
-   ```bash
-   mkdir /var/www/html/okd4
-   ```
+```
+[root@okd-svc ~]# mkdir /var/www/html/okd4
+```
 
-1. Copy all generated install files to the new web server directory
+26. Copy all generated install files to the new web server directory
 
-   ```bash
-   cp -R ~/okd-install/* /var/www/html/okd4
-   ```
+```
+[root@okd-svc ~]# cp -R ~/okd-install/* /var/www/html/okd4
+```
 
-1. Move the Core OS image to the web server directory (later you need to type this path multiple times so it is a good idea to shorten the name)
+17. Change ownership and permissions of the web server directory
 
-   ```bash
-   mv ~/rhcos-X.X.X-x86_64-metal.x86_64.raw.gz /var/www/html/okd4/rhcos
-   ```
-
-1. Change ownership and permissions of the web server directory
-
-   ```bash
-   chcon -R -t httpd_sys_content_t /var/www/html/okd4/
-   chown -R apache: /var/www/html/okd4/
-   chmod 755 /var/www/html/okd4/
-   ```
+```
+[root@okd-svc ~]# chcon -R -t httpd_sys_content_t /var/www/html/okd4/
+[root@okd-svc ~]# chown -R apache: /var/www/html/okd4/
+[root@okd-svc ~]# chmod 644 /var/www/html/okd4/
+```
 
 1. Confirm you can see all files added to the `/var/www/html/okd4/` dir through Apache
 
-   ```bash
-   curl localhost:8080/okd4/
-   ```
+```
+[root@okd-svc ~]# curl localhost:8080/okd4/
+```
 
 ## Deploy OpenShift
 
