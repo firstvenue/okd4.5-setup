@@ -59,13 +59,25 @@
 1. Download the following files:
      - openshift-client-linux-4.5.x-x.okd-xxxx-xx-xx-xxxxxx.tar.gz
      - openshift-install-linux-4.5.x-x.okd-xxxx-xx-xx-xxxxxx.tar.gz
+
+## Configure OKD Network on KVM Host
+     - Create OKD Network
+
+``` [root@sm-epyc-centos8 ~]# cat /etc/libvirt/qemu/networks/okd45.xml 
+<network>
+  <name>okd45</name>
+  <forward mode='nat'/>
+  <domain name='okd45.smcloud.local'/>
+  <ip address='192.168.100.1' netmask='255.255.255.0'>
+  </ip>
+</network>```
+
+
 ## Configure Environmental Services
 
 1. Install CentOS8 on the okd-svc host
 
-   - Remove the home dir partition and assign all free storage to '/'
-   - Optionally you can install the 'Guest Tools' package to have monitoring and reporting in the VMware ESXi dashboard
-   - Enable the LAN NIC only to obtain a DHCP address from the LAN network and make note of the IP address (okd-svc_IP_address) assigned to the vm
+   - 
 
 1. Boot the okd-svc VM
 
