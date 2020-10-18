@@ -796,7 +796,7 @@ backend okd_https_ingress_backend
 [root@okd-svc ~]# cp -R ~/okd-install/* /var/www/html/okd4
 ```
 
-17. Change ownership and permissions of the web server directory
+27. Change ownership and permissions of the web server directory
 
 ```
 [root@okd-svc ~]# chcon -R -t httpd_sys_content_t /var/www/html/okd4/
@@ -804,7 +804,7 @@ backend okd_https_ingress_backend
 [root@okd-svc ~]# chmod 644 /var/www/html/okd4/
 ```
 
-1. Confirm you can see all files added to the `/var/www/html/okd4/` dir through Apache
+28. Confirm you can see all files added to the `/var/www/html/okd4/` dir through Apache
 
 ```
 [root@okd-svc ~]# curl -I http://localhost/okd4/
@@ -820,32 +820,45 @@ Content-Type: application/vnd.coreos.ignition+json
 
 ## Deploy OpenShift
 
-1. Power on the okd-bootstrap host and okd-cp-\# hosts and select 'Tab' to enter boot configuration. Enter the following configuration:
+1. Create qcow2 image for okd-bootstrap host and okd-cp-\#.
+```
+[root@sm-epyc-centos8 ~]# qemu-img create -f qcow2 /var/lib/libvirt/images/okd-bootstrap.qcow2 120G
 
-   ```bash
-   # Bootstrap Node - okd-bootstrap
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.100.1:8080/okd4/rhcos coreos.inst.ignition_url=http://192.168.100.1:8080/okd4/bootstrap.ign
-   ```
+[root@sm-epyc-centos8 ~]# qemu-img create -f qcow2 /var/lib/libvirt/images/okd-cp-1.qcow2 120G
 
-   ```bash
-   # Each of the Control Plane Nodes - okd-cp-\#
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.100.1:8080/okd4/rhcos coreos.inst.ignition_url=http://192.168.100.1:8080/okd4/master.ign
-   ```
+[root@sm-epyc-centos8 ~]# qemu-img create -f qcow2 /var/lib/libvirt/images/okd-cp-2.qcow2 120G
 
-1. Power on the okd-w-\# hosts and select 'Tab' to enter boot configuration. Enter the following configuration:
+[root@sm-epyc-centos8 ~]# qemu-img create -f qcow2 /var/lib/libvirt/images/okd-cp-3.qcow2 120G
 
-   ```bash
-   # Each of the Worker Nodes - okd-w-\#
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.100.1:8080/okd4/rhcos coreos.inst.ignition_url=http://192.168.100.1:8080/okd4/worker.ign
-   ```
+[root@sm-epyc-centos8 ~]# qemu-img create -f qcow2 /var/lib/libvirt/images/okd-w-1.qcow2 120G
+
+[root@sm-epyc-centos8 ~]# qemu-img create -f qcow2 /var/lib/libvirt/images/okd-w-2.qcow2 120G
+
+```
+2. Boot the okd-bootstrap , okd-cp-\# and okd-w-\# hosts with `FCOS live` ISO image and enter the following configuration:
+```
+ # Bootstrap Node - okd-bootstrap
+ coreos-installer install --insecure-ignition --ignition-url=https://192.168.100.5/bootstrap.ign /dev/vda
+```
+```
+ # Each of the Control Plane Nodes - okd-cp-\#
+ coreos-installer install --insecure-ignition --ignition-url=https://192.168.100.5/master.ign /dev/vda
+```
+```
+ # Each of the Worker Nodes - okd-w-\#
+ coreos-installer install --insecure-ignition --ignition-url=https://192.168.100.5/worker.ign /dev/vda
+```
+Once Installtion done reboot all the VMs.
+
+##### NOTE: After FCOS installs, the system reboots. During the system reboot, it applies the Ignition config file that you specified.
 
 ## Monitor the Bootstrap Process
 
-1. You can monitor the bootstrap process from the okd-svc host at different log levels (debug, error, info)
+3. You can monitor the bootstrap process from the okd-svc host at different log levels (debug, error, info)
 
-   ```bash
-   ~/openshift-install --dir ~/okd-install wait-for bootstrap-complete --log-level=debug
-   ```
+```
+[root@okd-svc ~]# openshift-install --dir ~/okd-install wait-for bootstrap-complete --log-level=debug
+```
 
 1. Once bootstrapping is complete the okd-boostrap node [can be removed](#remove-the-bootstrap-node)
 
