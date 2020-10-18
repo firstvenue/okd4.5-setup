@@ -1,0 +1,43 @@
+$TTL 1D
+@	IN SOA	 sm-epyc-centos8.smcloud.local. root.smcloud.local. (
+					0	; serial
+					1D	; refresh
+					1H	; retry
+					1W	; expire
+					3H )	; minimum
+                 		IN NS           sm-epyc-centos8.smcloud.local.
+sm-epyc-centos8			IN A		192.168.100.1
+
+$ORIGIN okd45.smcloud.local.
+; Temp Bootstrap Node
+ocp-bootstrap			IN A		192.168.100.20
+
+; Control Plane Nodes
+ocp-cp-1			IN A		192.168.100.21
+ocp-cp-2			IN A		192.168.100.22
+ocp-cp-3			IN A		192.168.100.23
+
+; ETCD Cluster
+etcd-0				IN A		192.168.100.21
+etcd-1				IN A		192.168.100.22
+etcd-2				IN A		192.168.100.23
+
+; Worker Nodes
+ocp-w-1				IN A		192.168.100.24
+ocp-w-2				IN A		192.168.100.25
+
+; OpenShift Internal SRV records (cluster name = okd45)
+_etcd-server-ssl._tcp.okd45.smcloud.local.    86400     IN    SRV     0    10    2380    etcd-0
+_etcd-server-ssl._tcp.okd45.smcloud.local.    86400     IN    SRV     0    10    2380    etcd-1
+_etcd-server-ssl._tcp.okd45.smcloud.local.    86400     IN    SRV     0    10    2380    etcd-2
+
+; OpenShift Internal - Load balancer
+api       			IN A            192.168.100.10
+api-int       			IN A            192.168.100.10
+
+$ORIGIN apps.okd45.smcloud.local.
+*				IN A		192.168.100.10
+
+oauth-openshift     		IN A     	192.168.100.10
+console-openshift-console     	IN A     	192.168.100.10
+

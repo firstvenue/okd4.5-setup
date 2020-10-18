@@ -1,0 +1,31 @@
+$TTL 1D
+@	IN SOA	 sm-epyc-centos8.okd45.smcloud.local. root.okd45.smcloud.local. (
+
+					0	; serial
+					1D	; refresh
+					1H	; retry
+					1W	; expire
+					3H )	; minimum
+                 		IN NS           sm-epyc-centos8.smcloud.local.
+1 				IN PTR 		sm-epyc-centos8
+
+; Temp Bootstrap Node
+20				IN PTR		ocp-bootstrap.okd45.smcloud.local.
+
+; Control Plane Nodes
+21 				IN PTR 		ocp-cp-1.okd45.smcloud.local.
+22 				IN PTR 		ocp-cp-2.okd45.smcloud.local.
+23 				IN PTR 		ocp-cp-3.okd45.smcloud.local.
+
+; ETCD Cluster
+21 				IN PTR 		etcd-0.okd45.smcloud.local.
+22 				IN PTR 		etcd-1.okd45.smcloud.local.
+23 				IN PTR 		etcd-2.okd45.smcloud.local.
+
+; Worker Nodes
+24 				IN PTR 		ocp-w-1.okd45.smcloud.local.
+25 				IN PTR 		ocp-w-2.okd45.smcloud.local.
+
+; OpenShift Internal - Load balancer
+10				IN PTR		api.okd45.smcloud.local
+10				IN PTR		api-api.okd45.smcloud.local
