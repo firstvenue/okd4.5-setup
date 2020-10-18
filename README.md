@@ -1,6 +1,6 @@
 # OKD 4.5 Bare Metal Install - User Provisioned Infrastructure (UPI)
 
-- [OKD 4.5 Bare Metal Install - User Provisioned Infrastructure (UPI)]
+  - [OKD 4.5 Bare Metal Install - User Provisioned Infrastructure (UPI)](#openshift-4-bare-metal-install---user-provisioned-infrastructure-upi)
   - [Prepare the 'Bare Metal' environment](#prepare-the-bare-metal-environment)
   - [Download Software](#download-required-software)
   - [Configure Environmental Services](#configure-environmental-services)
@@ -20,7 +20,7 @@
 
 > KVM Host is used in this solution.
 
-1. Required machines:
+### Required machines:
 1. One temporary bootstrap machine
    - Name: okd-boostrap
    - 4vcpu
@@ -96,12 +96,16 @@
 ``` 
 2. Boot the okd-svc VM
 ```
-[root@sm-epyc-centos8 ~]# /usr/bin/virt-install --connect qemu:///system --name okd-svc --memory 4096 --vcpus 4 --os-type=linux --disk /var/lib/libvirt/images/CentOS-8-GenericCloud-8.2.2004-20200611.2.x86_64.qcow2,device=disk,bus=virtio,format=qcow2 --network network:okd45,model=virtio --noautoconsole --import --os-variant rhel8.0 &> /dev/null
+[root@sm-epyc-centos8 ~]# /usr/bin/virt-install --connect qemu:///system \
+--name okd-svc --memory 4096 --vcpus 4 --os-type=linux --disk \
+/var/lib/libvirt/images/CentOS-8-GenericCloud-8.2.2004-20200611.2.x86_64.qcow2,device=disk,bus=virtio,format=qcow2 \
+--network network:okd45,model=virtio --noautoconsole --import --os-variant rhel8.0 &> /dev/null
 ``` 
 3. Move the files downloaded from the RedHat Cluster Manager site to the okd-svc node
 
 ```
-[root@sm-epyc-centos8 ~]# scp ~/Downloads/openshift-install-linux.tar.gz ~/Downloads/openshift-client-linux.tar.gz root@{okd-svc_IP_address}:/root/
+[root@sm-epyc-centos8 ~]# scp ~/Downloads/openshift-install-linux.tar.gz \
+~/Downloads/openshift-client-linux.tar.gz root@{okd-svc_IP_address}:/root/
    ```
 
 4. SSH to the okd-svc vm
