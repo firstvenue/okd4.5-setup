@@ -548,7 +548,7 @@ host okd-haproxy {
 ```
 [root@okd-svc ~]# dnf install httpd -y
 ```
-
+```
 [root@okd-svc ~]# firewall-cmd --add-port=80/tcp --zone=internal --permanent
 [root@okd-svc ~]# firewall-cmd --reload
 ```
