@@ -417,8 +417,37 @@ $TTL 1D
 
 ```
 [root@okd-svc ~]# dig okd45.smcloud.local
+
+```
    # The following should return the answer okd-bootstrap.okd45.smcloud.local from the local server
+```
 [root@okd-svc ~]# dig -x 192.168.100.20
+; <<>> DiG 9.11.13-RedHat-9.11.13-6.el8_2.1 <<>> -x 192.168.100.20
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 21483
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 1, ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+; COOKIE: 44ff2d5af56a9a091c08932a5f8be60f56018037b5fecf82 (good)
+;; QUESTION SECTION:
+;20.100.168.192.in-addr.arpa.	IN	PTR
+
+;; ANSWER SECTION:
+20.100.168.192.in-addr.arpa. 86400 IN	PTR	ocp-bootstrap.okd45.smcloud.local.
+
+;; AUTHORITY SECTION:
+100.168.192.in-addr.arpa. 86400	IN	NS	okd-svc.smcloud.local.
+
+;; ADDITIONAL SECTION:
+okd-svc.smcloud.local. 86400 IN	A	192.168.100.5
+
+;; Query time: 0 msec
+;; SERVER: 10.160.10.1#53(10.160.10.1)
+;; WHEN: Sun Oct 18 12:21:59 IST 2020
+;; MSG SIZE  rcvd: 177
+
 ```
 
 15. Install & configure DHCP
