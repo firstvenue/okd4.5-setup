@@ -417,9 +417,9 @@ $TTL 1D
 
 ```
 [root@okd-svc ~]# dig okd45.smcloud.local
-
 ```
-   # The following should return the answer okd-bootstrap.okd45.smcloud.local from the local server
+The following should return the answer okd-bootstrap.okd45.smcloud.local from the local server
+
 ```
 [root@okd-svc ~]# dig -x 192.168.100.20
 ; <<>> DiG 9.11.13-RedHat-9.11.13-6.el8_2.1 <<>> -x 192.168.100.20
@@ -447,7 +447,6 @@ okd-svc.smcloud.local. 86400 IN	A	192.168.100.5
 ;; SERVER: 10.160.10.1#53(10.160.10.1)
 ;; WHEN: Sun Oct 18 12:21:59 IST 2020
 ;; MSG SIZE  rcvd: 177
-
 ```
 
 15. Install & configure DHCP
