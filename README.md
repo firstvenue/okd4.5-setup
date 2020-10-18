@@ -329,12 +329,12 @@ sm-epyc-centos8			IN A		192.168.100.1
 
 $ORIGIN okd45.smcloud.local.
 ; Temp Bootstrap Node
-ocp-bootstrap			IN A		192.168.100.20
+okd-bootstrap			IN A		192.168.100.20
 
 ; Control Plane Nodes
-ocp-cp-1			IN A		192.168.100.21
-ocp-cp-2			IN A		192.168.100.22
-ocp-cp-3			IN A		192.168.100.23
+okd-cp-1			IN A		192.168.100.21
+okd-cp-2			IN A		192.168.100.22
+okd-cp-3			IN A		192.168.100.23
 
 ; ETCD Cluster
 etcd-0				IN A		192.168.100.21
@@ -342,8 +342,8 @@ etcd-1				IN A		192.168.100.22
 etcd-2				IN A		192.168.100.23
 
 ; Worker Nodes
-ocp-w-1				IN A		192.168.100.24
-ocp-w-2				IN A		192.168.100.25
+okd-w-1				IN A		192.168.100.24
+okd-w-2				IN A		192.168.100.25
 
 ; OpenShift Internal SRV records (cluster name = okd45)
 _etcd-server-ssl._tcp.okd45.smcloud.local.    86400     IN    SRV     0    10    2380    etcd-0
@@ -375,12 +375,12 @@ $TTL 1D
 1 				IN PTR 		sm-epyc-centos8
 
 ; Temp Bootstrap Node
-20				IN PTR		ocp-bootstrap.okd45.smcloud.local.
+20				IN PTR		okd-bootstrap.okd45.smcloud.local.
 
 ; Control Plane Nodes
-21 				IN PTR 		ocp-cp-1.okd45.smcloud.local.
-22 				IN PTR 		ocp-cp-2.okd45.smcloud.local.
-23 				IN PTR 		ocp-cp-3.okd45.smcloud.local.
+21 				IN PTR 		okd-cp-1.okd45.smcloud.local.
+22 				IN PTR 		okd-cp-2.okd45.smcloud.local.
+23 				IN PTR 		okd-cp-3.okd45.smcloud.local.
 
 ; ETCD Cluster
 21 				IN PTR 		etcd-0.okd45.smcloud.local.
@@ -388,8 +388,8 @@ $TTL 1D
 23 				IN PTR 		etcd-2.okd45.smcloud.local.
 
 ; Worker Nodes
-24 				IN PTR 		ocp-w-1.okd45.smcloud.local.
-25 				IN PTR 		ocp-w-2.okd45.smcloud.local.
+24 				IN PTR 		okd-w-1.okd45.smcloud.local.
+25 				IN PTR 		okd-w-2.okd45.smcloud.local.
 
 ; OpenShift Internal - Load balancer
 10				IN PTR		api.okd45.smcloud.local
