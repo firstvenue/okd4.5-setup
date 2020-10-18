@@ -238,7 +238,7 @@ Update the preferred editor
 
 [root@okd-svc ~]# cp -R ~/okd4.5-setup/dns/zones/* /var/named/
 ```
-view config file:
+view config file: `/etc/named.conf`
 
 ```
 [root@okd-svc ~]# cat /etc/named.conf
@@ -314,7 +314,7 @@ include "/etc/named.rfc1912.zones";
 include "/etc/named.root.key";
 ```
 
-view zone files: forward.zone
+view zone files: `/var/named/forward.zone`
 ```
 [root@okd-svc ~]# cat /var/named/forward.zone
 $TTL 1D
@@ -360,7 +360,7 @@ $ORIGIN apps.okd45.smcloud.local.
 oauth-openshift     		IN A     	192.168.100.10
 console-openshift-console     	IN A     	192.168.100.10
 ```
-view zone files: reverse.zone
+view zone files: `/var/named/reverse.zone`
 ```
 [root@okd-svc ~]# cat /var/named/reverse.zone
 $TTL 1D
@@ -462,7 +462,7 @@ okd-svc.smcloud.local. 86400 IN	A	192.168.100.5
 ```
 [root@okd-svc ~]# cp ~/okd4.5-setup/dhcpd.conf /etc/dhcp/dhcpd.conf
 ```
-view 'dhcpd.conf' file:
+view `/etc/dhcp/dhcpd.conf` file:
 
 ```
 [root@okd-svc ~]# cat /etc/dhcp/dhcpd.conf
@@ -574,7 +574,7 @@ host okd-haproxy {
 ```
 [root@okd-haproxy ~]# cp ~/okd4.5/haproxy.cfg /etc/haproxy/haproxy.cfg
 ```
-view 'haproxy.cfg'
+view `/etc/haproxy/haproxy.cfg`
 
 ```
 [root@okd-haproxy ~]# cat /etc/haproxy/haproxy.cfg
