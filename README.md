@@ -90,94 +90,103 @@
 ## Configure Environmental Services
 
 1. Install CentOS8 on the okd-svc host
-
-   - 
-
+   - Download qcow2 image
+```
+[root@sm-epyc-centos8 ~]# wget https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-GenericCloud-8.2.2004-20200611.2.x86_64.qcow2 
+``` 
 1. Boot the okd-svc VM
-
+```
+[root@sm-epyc-centos8 ~]# /usr/bin/virt-install --connect qemu:///system --name okd-svc --memory 4096 --vcpus 4 --os-type=linux --disk /var/lib/libvirt/images/CentOS-8-GenericCloud-8.2.2004-20200611.2.x86_64.qcow2,device=disk,bus=virtio,format=qcow2 --network network:okd45,model=virtio --noautoconsole --import --os-variant rhel8.0 &> /dev/null
+``` 
 1. Move the files downloaded from the RedHat Cluster Manager site to the okd-svc node
 
-   ```bash
-   scp ~/Downloads/openshift-install-linux.tar.gz ~/Downloads/openshift-client-linux.tar.gz ~/Downloads/rhcos-x.x.x-x86_64-installer.x86_64.iso root@{okd-svc_IP_address}:/root/
+```
+[root@sm-epyc-centos8 ~]# scp ~/Downloads/openshift-install-linux.tar.gz ~/Downloads/openshift-client-linux.tar.gz root@{okd-svc_IP_address}:/root/
    ```
 
 1. SSH to the okd-svc vm
 
-   ```bash
-   ssh root@{okd-svc_IP_address}
-   ```
+```
+[root@sm-epyc-centos8 ~]# ssh root@{okd-svc_IP_address}
+[root@okd-svc ~]#
+```
 
 1. Extract Client tools and copy them to `/usr/local/bin`
 
-   ```bash
-   tar xvf openshift-client-linux.tar.gz
-   mv oc kubectl /usr/local/bin
-   ```
+```
+[root@okd-svc ~]# mkdir /root/bin/
+[root@okd-svc ~]# tar xvf openshift-client-linux.tar.gz -C /root/bin
+```
 
 1. Confirm Client Tools are working
 
-   ```bash
-   kubectl version
-   oc version
-   ```
+```
+[root@okd-svc ~]# kubectl version
+Client Version: version.Info{Major:"1", Minor:"13", GitVersion:"v1.13.0", GitCommit:"ddf47ac13c1a9483ea035a79cd7c10005ff21a6d", GitTreeState:"clean", BuildDate:"2018-12-03T21:04:45Z", GoVersion:"go1.11.2", Compiler:"gc", Platform:"linux/amd64"}
+Server Version: version.Info{Major:"1", Minor:"18+", GitVersion:"v1.18.3", GitCommit:"9cdca7b", GitTreeState:"clean", BuildDate:"2020-10-02T23:12:03Z", GoVersion:"go1.13.8", Compiler:"gc", Platform:"linux/amd64"}
+```
+```
+[root@okd-svc ~]# oc version
+Client Version: 4.5.0-202005291417-9933eb9
+Server Version: 4.5.0-0.okd-2020-10-03-012432
+Kubernetes Version: v1.18.3
+```
 
 1. Extract the OpenShift Installer
 
-   ```bash
-   tar xvf openshift-install-linux.tar.gz
-   ```
+```
+[root@okd-svc ~]# tar xvf openshift-install-linux.tar.gz -C /root/bin/
+```
 
 1. Update CentOS so we get the latest packages for each of the services we are about to install
 
-   ```bash
-   dnf update
-   ```
+```
+[root@okd-svc ~]# dnf update
+```
 
 1. Install Git
 
-   ```bash
-   dnf install git -y
-   ```
+```
+[root@okd-svc ~]# dnf install git -y
+```
 
 1. Download [config files](https://github.com/ryanhay/okd4-metal-install) for each of the services
 
-   ```bash
-   git clone https://github.com/ryanhay/okd4-metal-install
-   ```
+```bash
+[root@okd-svc ~]# git clone git@github.com:vijayibm/okd4.5-setup.git
+```
 
 1. OPTIONAL: Create a file '~/.vimrc' and paste the following (this helps with editing in vim, particularly yaml files):
 
-   ```bash
-   cat <<EOT >> ~/.vimrc
+```
+[root@okd-svc ~]# cat <<EOT >> ~/.vimrc
    syntax on
    set nu et ai sts=0 ts=2 sw=2 list hls
    EOT
-   ```
+```
 
-   Update the preferred editor
+Update the preferred editor
 
-   ```bash
-   export OC_EDITOR="vim"
-   export KUBE_EDITOR="vim"
-   ```
+```
+[root@okd-svc ~]# export OC_EDITOR="vim"
+[root@okd-svc ~]# export KUBE_EDITOR="vim"
+```
 
-1. Set a Static IP for OKD network interface `nmtui-edit ens224` or edit `/etc/sysconfig/network-scripts/ifcfg-ens224`
+1. Set a Static IP for OKD network interface `nmtui-edit ens3` or edit `/etc/sysconfig/network-scripts/ifcfg-ens3`
 
-   - **Address**: 192.168.22.1
-   - **DNS Server**: 127.0.0.1
-   - **Search domain**: okd.lan
-   - Never use this network for default route
-   - Automatically connect
+   - **Address**: 192.168.100.1
+   - **DNS Server**: 192.168.100.1
+   - **Search domain**: okd45.smcloud.local
 
-   > If changes arent applied automatically you can bounce the NIC with `nmcli connection down ens224` and `nmcli connection up ens224`
+   > If changes arent applied automatically you can bounce the NIC with `nmcli connection down ens3` and `nmcli connection up ens3`
 
 1. Setup firewalld
 
    Create **internal** and **external** zones
 
    ```bash
-   nmcli connection modify ens224 connection.zone internal
-   nmcli connection modify ens192 connection.zone external
+   nmcli connection modify ens3 connection.zone internal
+   nmcli connection modify ens3 connection.zone external
    ```
 
    View zones:
@@ -263,7 +272,7 @@
    ```bash
    dig okd.lan
    # The following should return the answer okd-bootstrap.lab.okd.lan from the local server
-   dig -x 192.168.22.200
+   dig -x 192.168.100.200
    ```
 
 1. Install & configure DHCP
@@ -390,7 +399,7 @@
    Export the Share
 
    ```bash
-   echo "/shares/registry  192.168.22.0/24(rw,sync,root_squash,no_subtree_check,no_wdelay)" > /etc/exports
+   echo "/shares/registry  192.168.100.0/24(rw,sync,root_squash,no_subtree_check,no_wdelay)" > /etc/exports
    exportfs -rv
    ```
 
@@ -493,19 +502,19 @@
 
    ```bash
    # Bootstrap Node - okd-bootstrap
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/okd4/rhcos coreos.inst.ignition_url=http://192.168.22.1:8080/okd4/bootstrap.ign
+   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.100.1:8080/okd4/rhcos coreos.inst.ignition_url=http://192.168.100.1:8080/okd4/bootstrap.ign
    ```
 
    ```bash
    # Each of the Control Plane Nodes - okd-cp-\#
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/okd4/rhcos coreos.inst.ignition_url=http://192.168.22.1:8080/okd4/master.ign
+   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.100.1:8080/okd4/rhcos coreos.inst.ignition_url=http://192.168.100.1:8080/okd4/master.ign
    ```
 
 1. Power on the okd-w-\# hosts and select 'Tab' to enter boot configuration. Enter the following configuration:
 
    ```bash
    # Each of the Worker Nodes - okd-w-\#
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/okd4/rhcos coreos.inst.ignition_url=http://192.168.22.1:8080/okd4/worker.ign
+   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.100.1:8080/okd4/rhcos coreos.inst.ignition_url=http://192.168.100.1:8080/okd4/worker.ign
    ```
 
 ## Monitor the Bootstrap Process
@@ -660,7 +669,7 @@
 1. You can collect logs from all cluster hosts by running the following command from the 'okd-svc' host:
 
    ```bash
-   ./openshift-install gather bootstrap --dir okd-install --bootstrap=192.168.22.200 --master=192.168.22.201 --master=192.168.22.202 --master=192.168.22.203
+   ./openshift-install gather bootstrap --dir okd-install --bootstrap=192.168.100.200 --master=192.168.100.201 --master=192.168.100.202 --master=192.168.100.203
    ```
 
 1. Modify the role of the Control Plane Nodes
