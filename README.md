@@ -549,16 +549,7 @@ host okd-haproxy {
 [root@okd-svc ~]# dnf install httpd -y
 ```
 
-   Change default listen port to 8080 in httpd.conf
-
-```
-[root@okd-svc ~]# sed -i 's/Listen 80/Listen 0.0.0.0:8080/' /etc/httpd/conf/httpd.conf
-```
-
-   Configure the firewall for Web Server traffic
-
-```
-[root@okd-svc ~]# firewall-cmd --add-port=8080/tcp --zone=internal --permanent
+[root@okd-svc ~]# firewall-cmd --add-port=80/tcp --zone=internal --permanent
 [root@okd-svc ~]# firewall-cmd --reload
 ```
 
@@ -568,12 +559,6 @@ host okd-haproxy {
 [root@okd-svc ~]# systemctl enable httpd
 [root@okd-svc ~]# systemctl start httpd
 [root@okd-svc ~]# systemctl status httpd
-```
-
-   Making a GET request to localhost on port 8080 should now return the default Apache webpage
-
-```
-[root@okd-svc ~]# curl localhost:8080
 ```
 
 17. Install & configure HAProxy
@@ -716,9 +701,9 @@ backend okd_https_ingress_backend
 
    Install NFS Server
 
-```bash
+```
 [root@okd-svc ~]# dnf install nfs-utils -y
-   ```
+```
 
    Create the Share
 
@@ -748,7 +733,7 @@ backend okd_https_ingress_backend
 
    Enable and start the NFS related services
 
-```bash
+```
 [root@okd-svc ~]# systemctl enable nfs-server rpcbind
 [root@okd-svc ~]# systemctl start nfs-server rpcbind nfs-mountd
 ```
@@ -822,7 +807,15 @@ backend okd_https_ingress_backend
 1. Confirm you can see all files added to the `/var/www/html/okd4/` dir through Apache
 
 ```
-[root@okd-svc ~]# curl localhost:8080/okd4/
+[root@okd-svc ~]# curl -I http://localhost/okd4/
+HTTP/1.1 200 OK
+Date: Sun, 18 Oct 2020 07:18:50 GMT
+Server: Apache/2.4.37 (centos)
+Last-Modified: Thu, 15 Oct 2020 08:13:34 GMT
+ETag: "48d22-5b1b1396be415"
+Accept-Ranges: bytes
+Content-Length: 298274
+Content-Type: application/vnd.coreos.ignition+json
 ```
 
 ## Deploy OpenShift
