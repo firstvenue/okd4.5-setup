@@ -2,9 +2,9 @@
 
 - [OKD 4.5 Bare Metal Install - User Provisioned Infrastructure (UPI)]
   - [Prepare the 'Bare Metal' environment](#prepare-the-bare-metal-environment)
+  - [Download Software](#download-software)
   - [Configure Environmental Services](#configure-environmental-services)
   - [Generate and host install files](#generate-and-host-install-files)
-  - [Download Software](#download-software)
   - [Deploy OpenShift](#deploy-openshift)
   - [Monitor the Bootstrap Process](#monitor-the-bootstrap-process)
   - [Remove the Bootstrap Node](#remove-the-bootstrap-node)
@@ -15,16 +15,6 @@
   - [Access the OpenShift Console](#access-the-openshift-console)
   - [Troubleshooting](#troubleshooting)
 
-## Download Required Software
-
-1. Download [FCOS images from the](https://getfedora.org/en/coreos/download?tab=metal_virtualized&stream=stable)
-1. Select 'ISO Image' from the page.
-1. Download the following file:
-     - fedora-coreos-xx.xxxxx.xx-live.x86_64.iso
-1. Download installer [openshift-installer](https://github.com/openshift/okd/releases)
-1. Download the following files:
-     - openshift-client-linux-4.5.x-x.okd-xxxx-xx-xx-xxxxxx.tar.gz
-     - openshift-install-linux-4.5.x-x.okd-xxxx-xx-xx-xxxxxx.tar.gz
 
 ## Prepare the 'Bare Metal' environment
 
@@ -59,6 +49,16 @@
 1. Shut down all virtual machines except for 'okd-svc'
 1. Use the ``` virsh domiflist <domain-name>``` command to record the MAC address of each vm, these will be used later to set static IPs.
 
+## Download Required Software
+
+1. Download [FCOS images from the](https://getfedora.org/en/coreos/download?tab=metal_virtualized&stream=stable)
+1. Select 'ISO Image' from the page.
+1. Download the following file:
+     - fedora-coreos-xx.xxxxx.xx-live.x86_64.iso
+1. Download installer [openshift-installer](https://github.com/openshift/okd/releases)
+1. Download the following files:
+     - openshift-client-linux-4.5.x-x.okd-xxxx-xx-xx-xxxxxx.tar.gz
+     - openshift-install-linux-4.5.x-x.okd-xxxx-xx-xx-xxxxxx.tar.gz
 ## Configure Environmental Services
 
 1. Install CentOS8 on the okd-svc host
