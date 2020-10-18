@@ -10,12 +10,12 @@ sm-epyc-centos8			IN A		192.168.100.1
 
 $ORIGIN okd45.smcloud.local.
 ; Temp Bootstrap Node
-ocp-bootstrap			IN A		192.168.100.20
+okd-bootstrap			IN A		192.168.100.20
 
 ; Control Plane Nodes
-ocp-cp-1			IN A		192.168.100.21
-ocp-cp-2			IN A		192.168.100.22
-ocp-cp-3			IN A		192.168.100.23
+okd-cp-1			IN A		192.168.100.21
+okd-cp-2			IN A		192.168.100.22
+okd-cp-3			IN A		192.168.100.23
 
 ; ETCD Cluster
 etcd-0				IN A		192.168.100.21
@@ -23,8 +23,8 @@ etcd-1				IN A		192.168.100.22
 etcd-2				IN A		192.168.100.23
 
 ; Worker Nodes
-ocp-w-1				IN A		192.168.100.24
-ocp-w-2				IN A		192.168.100.25
+okd-w-1				IN A		192.168.100.24
+okd-w-2				IN A		192.168.100.25
 
 ; OpenShift Internal SRV records (cluster name = okd45)
 _etcd-server-ssl._tcp.okd45.smcloud.local.    86400     IN    SRV     0    10    2380    etcd-0
