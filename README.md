@@ -860,20 +860,22 @@ Once Installtion done reboot all the VMs.
 [root@okd-svc ~]# openshift-install --dir ~/okd-install wait-for bootstrap-complete --log-level=debug
 ```
 
-1. Once bootstrapping is complete the okd-boostrap node [can be removed](#remove-the-bootstrap-node)
+4. Once bootstrapping is complete the okd-boostrap node [can be removed](#remove-the-bootstrap-node)
 
 ## Remove the Bootstrap Node
 
-1. Remove all references to the `okd-bootstrap` host from the `/etc/haproxy/haproxy.cfg` file
+5. Remove all references to the `okd-bootstrap` host from the `/etc/haproxy/haproxy.cfg` file
 
-   ```bash
+```
    # Two entries
-   vim /etc/haproxy/haproxy.cfg
+[root@okd-svc ~]# vim /etc/haproxy/haproxy.cfg
+
    # Restart HAProxy - If you are still watching HAProxy stats console you will see that the okd-boostrap host has been removed from the backends.
-   systemctl reload haproxy
+
+[root@okd-svc ~]# systemctl reload haproxy
    ```
 
-1. The okd-bootstrap host can now be safely shutdown and deleted from the VMware ESXi Console, the host is no longer required
+6. The okd-bootstrap host can now be safely shutdown and deleted from the KVM Host, the host is no longer required
 
 ## Wait for installation to complete
 
@@ -881,43 +883,57 @@ Once Installtion done reboot all the VMs.
 
 1. Collect the OpenShift Console address and kubeadmin credentials from the output of the install-complete event
 
-   ```bash
-   ~/openshift-install --dir ~/okd-install wait-for install-complete
-   ```
+```
+[root@okd-svc ~]# openshift-install --dir ~/okd-install wait-for install-complete
+```
 
-1. Continue to join the worker nodes to the cluster in a new tab whilst waiting for the above command to complete
+2. Continue to join the worker nodes to the cluster in a new tab whilst waiting for the above command to complete
 
 ## Join Worker Nodes
 
-1. Setup 'oc' and 'kubectl' clients on the okd-svc machine
+3. Setup 'oc' and 'kubectl' clients on the okd-svc machine
 
-   ```bash
-   export KUBECONFIG=~/okd-install/auth/kubeconfig
+```
+[root@okd-svc ~]# export KUBECONFIG=~/okd-install/auth/kubeconfig
+
    # Test auth by viewing cluster nodes
-   oc get nodes
-   ```
+
+[root@okd-svc ~]# oc get nodes
+NAME       STATUS                     ROLES    AGE     VERSION
+okd-cp-1   Ready                      master   2d23h   v1.18.3
+okd-cp-2   Ready                      master   2d23h   v1.18.3
+okd-cp-3   Ready                      master   2d23h   v1.18.3
+```
 
 1. View and approve pending CSRs
 
    > Note: Once you approve the first set of CSRs additional 'kubelet-serving' CSRs will be created. These must be approved too.
    > If you do not see pending requests wait until you do.
 
-   ```bash
+```
    # View CSRs
-   oc get csr
+[root@okd-svc ~]# oc get csr
+
    # Approve all pending CSRs
-   oc get csr -o go-template='{{range .items}}{{if not .status}}{{.metadata.name}}{{"\n"}}{{end}}{{end}}' | xargs oc adm certificate approve
+[root@okd-svc ~]# oc get csr -o go-template='{{range .items}}{{if not .status}}{{.metadata.name}}{{"\n"}}{{end}}{{end}}' | xargs oc adm certificate approve
+
    # Wait for kubelet-serving CSRs and approve them too with the same command
-   oc get csr -o go-template='{{range .items}}{{if not .status}}{{.metadata.name}}{{"\n"}}{{end}}{{end}}' | xargs oc adm certificate approve
+[root@okd-svc ~]# oc get csr -o go-template='{{range .items}}{{if not .status}}{{.metadata.name}}{{"\n"}}{{end}}{{end}}' | xargs oc adm certificate approve
    ```
 
 1. Watch and wait for the Worker Nodes to join the cluster and enter a 'Ready' status
 
    > This can take 5-10 minutes
 
-   ```bash
-   watch -n5 oc get nodes
-   ```
+```
+[root@okd-svc ~]# oc get nodes
+NAME       STATUS                     ROLES    AGE     VERSION
+okd-cp-1   Ready                      master   2d23h   v1.18.3
+okd-cp-2   Ready                      master   2d23h   v1.18.3
+okd-cp-3   Ready                      master   2d23h   v1.18.3
+okd-w-1    Ready		      worker   2d22h   v1.18.3
+okd-w-2    Ready                      worker   2d21h   v1.18.3
+```
 
 ## Configure storage for the Image Registry
 
@@ -925,9 +941,9 @@ Once Installtion done reboot all the VMs.
 
 1. Create the 'image-registry-storage' PVC by updating the Image Registry operator config by updating the management state to 'Managed' and adding 'pvc' and 'claim' keys in the storage key:
 
-   ```bash
-   oc edit configs.imageregistry.operator.openshift.io
-   ```
+```
+[root@okd-svc ~]# oc edit configs.imageregistry.operator.openshift.io
+```
 
    ```yaml
    managementState: Managed
@@ -939,75 +955,91 @@ Once Installtion done reboot all the VMs.
        claim: # leave the claim blank
    ```
 
-1. Confirm the 'image-registry-storage' pvc has been created and is currently in a 'Pending' state
+2. Confirm the 'image-registry-storage' pvc has been created and is currently in a 'Pending' state
 
-   ```bash
-   oc get pvc -n openshift-image-registry
-   ```
+```
+[root@okd-svc ~]# oc get pvc -n openshift-image-registry
+```
 
-1. Create the persistent volume for the 'image-registry-storage' pvc to bind to
+3. Create the persistent volume for the 'image-registry-storage' pvc to bind to
 
-   ```bash
-   oc create -f ~/okd4-metal-install/manifest/registry-pv.yaml
-   ```
+```yaml
+[root@okd-svc ~]# cat ~/okd4.5-setup/manifest/registry-pv.yaml 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: registry-pv
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 100Gi
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /okd45/registry
+    server: 192.168.100.5
+```
+```
+[root@okd-svc ~]# oc create -f ~/okd4.5-setup/manifest/registry-pv.yaml
+```
 
-1. After a short wait the 'image-registry-storage' pvc should now be bound
+4. After a short wait the 'image-registry-storage' pvc should now be bound
 
-   ```bash
-   oc get pvc -n openshift-image-registry
-   ```
+```
+[root@okd-svc ~]# oc get pvc -n openshift-image-registry
+```
 
 ## Create the first Admin user
 
-1. Apply the `oauth-htpasswd.yaml` file to the cluster
+5. Apply the `oauth-htpasswd.yaml` file to the cluster
 
    > This will create a user 'admin' with the password 'password'. To set a different username and password substitue the htpasswd key in the '~/okd4-metal-install/manifest/oauth-htpasswd.yaml' file with the output of `htpasswd -n -B -b <username> <password>`
 
-   ```bash
-   oc apply -f ~/okd4-metal-install/manifest/oauth-htpasswd.yaml
-   ```
+```
+[root@okd-svc ~]# oc apply -f ~/okd4.5-setup/manifest/oauth-htpasswd.yaml
+```
 
-1. Assign the new user (admin) admin permissions
+6. Assign the new user (admin) admin permissions
 
-   ```bash
-   oc adm policy add-cluster-role-to-user cluster-admin admin
-   ```
+```
+[root@okd-svc ~]# oc adm policy add-cluster-role-to-user cluster-admin admin
+```
 
 ## Access the OpenShift Console
 
-1. Wait for the 'console' Cluster Operator to become available
+7. Wait for the 'console' Cluster Operator to become available
 
-   ```bash
-   oc get co
-   ```
+```
+[root@okd-svc ~]# oc get co
+```
 
-1. Append the following to your local workstations `/etc/hosts` file:
+8. Append the following to your local workstations `/etc/hosts` file:
 
    > From your local workstation
-   > If you do not want to add an entry for each new service made available on OpenShift you can configure the okd-svc DNS server to serve externally and create a wildcard entry for \*.apps.lab.okd.lan
+   > If you do not want to add an entry for each new service made available on OpenShift you can configure the okd-svc DNS server to serve externally and create a wildcard entry for \*.apps.okd45.smcloud.local
 
-   ```bash
+```
    # Open the hosts file
-   sudo vi /etc/hosts
+sudo vi /etc/hosts
 
    # Append the following entries:
-   192.168.0.96 okd-svc api.lab.okd.lan console-openshift-console.apps.lab.okd.lan oauth-openshift.apps.lab.okd.lan downloads-openshift-console.apps.lab.okd.lan alertmanager-main-openshift-monitoring.apps.lab.okd.lan grafana-openshift-monitoring.apps.lab.okd.lan prometheus-k8s-openshift-monitoring.apps.lab.okd.lan thanos-querier-openshift-monitoring.apps.lab.okd.lan
+   192.168.0.96 okd-svc api.okd45.smcloud.local console-openshift-console.apps.okd45.smcloud.local oauth-openshift.apps.okd45.smcloud.local downloads-openshift-console.apps.okd45.smcloud.local alertmanager-main-openshift-monitoring.apps.okd45.smcloud.local grafana-openshift-monitoring.apps.okd45.smcloud.local prometheus-k8s-openshift-monitoring.apps.okd45.smcloud.local thanos-querier-openshift-monitoring.apps.okd45.smcloud.local
    ```
 
-1. Navigate to the [OpenShift Console URL](https://console-openshift-console.apps.lab.okd.lan) and log in as the 'admin' user
+9. Navigate to the [OpenShift Console URL](https://console-openshift-console.apps.okd45.smcloud.local) and log in as the 'admin' user
 
    > You will get self signed certificate warnings that you can ignore
    > If you need to login as kubeadmin and need to the password again you can retrieve it with: `cat ~/okd-install/auth/kubeadmin-password`
 
 ## Troubleshooting
 
-1. You can collect logs from all cluster hosts by running the following command from the 'okd-svc' host:
+10. You can collect logs from all cluster hosts by running the following command from the 'okd-svc' host:
 
-   ```bash
-   ./openshift-install gather bootstrap --dir okd-install --bootstrap=192.168.100.200 --master=192.168.100.201 --master=192.168.100.202 --master=192.168.100.203
-   ```
+```
+[root@okd-svc ~]# openshift-install gather bootstrap --dir okd-install --bootstrap=192.168.100.20 --master=192.168.100.21 --master=192.168.100.22 --master=192.168.100.23
+```
 
-1. Modify the role of the Control Plane Nodes
+11. Modify the role of the Control Plane Nodes
 
    If you would like to schedule workloads on the Control Plane nodes apply the 'worker' role by changing the value of 'mastersSchedulable' to true.
 
@@ -1015,6 +1047,6 @@ Once Installtion done reboot all the VMs.
 
    > Remember depending on where you host your workloads you will have to update HAProxy to include or exclude the control plane nodes from the ingress backends.
 
-   ```bash
-   oc edit schedulers.config.openshift.io cluster
-   ```
+```
+[root@okd-svc ~]# oc edit schedulers.config.openshift.io cluster
+```
